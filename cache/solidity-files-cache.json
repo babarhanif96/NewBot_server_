@@ -1,0 +1,47 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/babar/Downloads/Final_Deployment_on_Polygon/Backend/contracts/ERC20.sol": {
+      "lastModificationDate": 1724788140386,
+      "contentHash": "1be8e5f184d091faf5623588c06e3670",
+      "sourceName": "contracts/ERC20.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Context",
+        "ERC20",
+        "IDEXFactory",
+        "IDEXRouter",
+        "InterfaceLP",
+        "MyToken",
+        "Ownable",
+        "SafeMath"
+      ]
+    }
+  }
+}
