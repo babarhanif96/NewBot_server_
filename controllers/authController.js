@@ -82,8 +82,8 @@ exports.signup = async (req, res) => {
     const { firstName, lastName, email, password, mainWallet, role } = req.body;
     
     // Get device info from request headers
-    const userAgent = req.headers['user-agent'];  // User-Agent from the device/browser
-    const ipAddress = req.ip;  // IP address of the request
+    // const userAgent = req.headers['user-agent'];  // User-Agent from the device/browser
+    // const ipAddress = req.ip;  // IP address of the request
     
     try {
         // Check if the user already exists
@@ -104,13 +104,13 @@ exports.signup = async (req, res) => {
         });
 
         // Only apply device locking if the user is not an admin
-        if (role !== 'admin') {
-            newUser.registeredDevice = {
-                userAgent,
-                ipAddress,
-                isLocked: true  // Lock account to this device
-            };
-        }
+        // if (role !== 'admin') {
+        //     newUser.registeredDevice = {
+        //         userAgent,
+        //         ipAddress,
+        //         isLocked: true  // Lock account to this device
+        //     };
+        // }
 
         // Save the new user to the database
         await newUser.save();
