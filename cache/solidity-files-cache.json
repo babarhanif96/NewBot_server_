@@ -42,6 +42,48 @@
         "Ownable",
         "SafeMath"
       ]
+    },
+    "/Users/babar/Downloads/NEWBOT/newboot/server/contracts/ERC20.sol": {
+      "lastModificationDate": 1727980716863,
+      "contentHash": "085b3b14818155ec65d21efb3c365462",
+      "sourceName": "contracts/ERC20.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Context",
+        "ERC20",
+        "IDEXFactory",
+        "IDEXRouter",
+        "InterfaceLP",
+        "MyToken",
+        "Ownable",
+        "SafeMath"
+      ]
     }
   }
 }

@@ -13,19 +13,19 @@ module.exports = {
         }
     }
 },
-    defaultNetwork: "mainnet",
+    defaultNetwork: "polygon",
     networks: {
       hardhat: {
         chainId: 137
       },
-      mainnet: {
+      polygon: {
         url: process.env.INFURA_ENDPOINT,
         accounts: [process.env.PRIVATE_KEY],
       },
     },
     etherscan: {
       apiKey: {
-        mainnet: process.env.ETHERSCAN_API_KEY,
+        polygon: process.env.ETHERSCAN_API_KEY,
       },
     },
     sourcify: {

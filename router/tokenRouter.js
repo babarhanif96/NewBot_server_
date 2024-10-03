@@ -55,7 +55,7 @@ router.post('/credentials', protect, protectDeploy, async (req, res) => {
         // Verify the contract on Etherscan after deployment
         await verifyContractOnEtherscan(
             deploymentResult.contractAddress,
-            [ taxwallet, teamWallet  ,liqFee * 10 , mFee * 10 , uFee * 10 , tFee * 10 , bFee * 10 ]
+            [ taxwallet, teamWallet  ,liqFee * 1 , mFee * 1 , uFee * 1 , tFee * 1 , bFee * 1 ]
         );
 
 

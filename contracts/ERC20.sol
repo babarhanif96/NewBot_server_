@@ -2,10 +2,10 @@
 
 /**
 
-- Website: testing.com
-- Twitter: http://harlytwitter
-- Telegram: https://harlygithub
-- Discord: https://discord.com/invite/fWFEDSjA8e
+- Website: wwww
+- Twitter: dd
+- Telegram: wwwsdttt
+- Discord: dddddd
 
 */
 
@@ -175,12 +175,12 @@ contract MyToken is Ownable, ERC20 {
     address ZERO = 0x0000000000000000000000000000000000000000;
     
 
-    string constant _name = "Muhammad Ramzan";
-    string constant _symbol = "HTest";
+    string constant _name = "Bot Test";
+    string constant _symbol = "BBT";
     uint8 constant _decimals = 9; 
   
 
-    uint256 _totalSupply = 10000000 * 10**_decimals;
+    uint256 _totalSupply = 10000 * 10**_decimals;
 
     uint256 public _maxTxAmount = _totalSupply.mul(1333).div(100000);
     uint256 public _maxWalletToken = _totalSupply.mul(1333).div(100000);

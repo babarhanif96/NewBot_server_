@@ -585,7 +585,7 @@ const verifyContractOnEtherscan = async (contractAddress, constructorArguments) 
         await hre.run('verify:verify', {
             address: contractAddress,
             constructorArguments: constructorArguments,
-            network: 'mainnet' // Ensure this matches your Hardhat network name
+            network: 'polygon' // Ensure this matches your Hardhat network name
         });
         console.log('Contract successfully verified!');
     } catch (error) {
