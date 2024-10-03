@@ -10,8 +10,8 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Wallet"  // Referencing the Wallet model
     },
-    role: { 
-        type: String, 
+    role: {
+        type: String,
         enum: ['user', 'admin'],
         default: 'user'
     },
@@ -19,18 +19,23 @@ const userSchema = new mongoose.Schema({
         url: { type: String },
         public_id: { type: String }
     },
+    registeredDevice: {
+        userAgent: String,
+        ipAddress: String,
+        isLocked: { type: Boolean, default: false }, // Lock once logged in on one device
+    },
     deployfun: { type: Boolean, default: true },
     tradding: { type: Boolean, default: true }
 });
 
 // Middleware to remove `deployfun` and `tradding` for admin users before saving
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
     // If the user's role is admin, remove or ignore `deployfun` and `tradding`
     if (this.role === 'admin') {
         this.deployfun = true;  // You can also use `delete this.deployfun;`
         this.tradding = true;   // You can also use `delete this.tradding;`
     }
-    
+
     next();
 });
 

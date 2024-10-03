@@ -32,15 +32,15 @@ function decrypt(text) {
 // Middleware to protect routes
 exports.protect = async (req, res, next) => {
     let token;
-    
+
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }
-    
+
     if (!token) {
         return res.status(401).json({ message: 'Not authorized, token failed' });
     }
-    
+
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = await User.findById(decoded.userId).select('-password');
@@ -50,10 +50,41 @@ exports.protect = async (req, res, next) => {
     }
 };
 
-// Signup Controller
-exports.signup = async (req, res) => {
-    const { firstName, lastName, email, password , mainWallet , role } = req.body;
+exports.checkDeviceLock = async (req, res, next) => {
+    const { user } = req;  // Assuming the user is authenticated
+    const currentDeviceInfo = req.headers['user-agent'];
+    const currentIp = req.ip;
+//    console.log("currentDeviceInfo===",currentDeviceInfo);
+//    console.log("currentIp===",currentIp);
+    // Check if user account is locked to a specific device
+    if (user.registeredDevice.isLocked) {
+        // Compare stored device info with current device info
+        if (user.registeredDevice.userAgent !== currentDeviceInfo || user.registeredDevice.ipAddress !== currentIp) {
+            return res.status(403).json({ message: 'Account is locked to another device' });
+        }
+    } else {
+        // First login, lock the account to the current device
+        user.registeredDevice = {
+            userAgent: currentDeviceInfo,
+            ipAddress: currentIp,
+            isLocked: true,
+        };
+        await user.save();
+    }
 
+    next();
+};
+
+// Signup Controller
+
+
+exports.signup = async (req, res) => {
+    const { firstName, lastName, email, password, mainWallet, role } = req.body;
+    
+    // Get device info from request headers
+    const userAgent = req.headers['user-agent'];  // User-Agent from the device/browser
+    const ipAddress = req.ip;  // IP address of the request
+    
     try {
         // Check if the user already exists
         const userExists = await User.findOne({ email });
@@ -62,19 +93,38 @@ exports.signup = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Create a new user
-        const newUser = new User({ firstName, lastName, email, password  , mainWallet,  role: role || 'user'});
+        // Initialize the new user object
+        const newUser = new User({
+            firstName,
+            lastName,
+            email,
+            password,
+            mainWallet,
+            role: role || 'user',
+        });
+
+        // Only apply device locking if the user is not an admin
+        if (role !== 'admin') {
+            newUser.registeredDevice = {
+                userAgent,
+                ipAddress,
+                isLocked: true  // Lock account to this device
+            };
+        }
+
+        // Save the new user to the database
         await newUser.save();
 
         // Generate a JWT token
         const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        // Prepare user object without password
+        // Prepare user object without the password field
         const { password: pwd, ...userWithoutPassword } = newUser.toObject();
 
-        // Send response
+        // Send the response back to the client
         res.status(201).json({ token, user: userWithoutPassword });
     } catch (error) {
+        console.error('Error creating user:', error);
         res.status(500).json({ message: 'Error creating user', error });
     }
 };
@@ -82,6 +132,10 @@ exports.signup = async (req, res) => {
 // Login Controller
 exports.login = async (req, res) => {
     const { email, password } = req.body;
+
+    // Get device info from request headers
+    const currentDeviceInfo = req.headers['user-agent'];  // User-Agent from the device/browser
+    const currentIp = req.ip;  // IP address of the request
 
     try {
         // Find the user by email
@@ -98,6 +152,25 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
+        // Device lock applies only to non-admin users
+        if (user.role !== 'admin') {
+            // Check if the user account is locked to a specific device
+            if (user.registeredDevice.isLocked) {
+                // If current device info or IP does not match the registered one, reject login
+                if (user.registeredDevice.userAgent !== currentDeviceInfo || user.registeredDevice.ipAddress !== currentIp) {
+                    return res.status(403).json({ message: 'This account is locked to another device' });
+                }
+            } else {
+                // If first login, lock the account to the current device
+                user.registeredDevice = {
+                    userAgent: currentDeviceInfo,
+                    ipAddress: currentIp,
+                    isLocked: true,  // Lock account to this device
+                };
+                await user.save();
+            }
+        }
+
         // Generate a JWT token
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
@@ -107,10 +180,10 @@ exports.login = async (req, res) => {
         // Send response
         res.status(200).json({ token, user: userWithoutPassword });
     } catch (error) {
+        console.error('Error logging in:', error);
         res.status(500).json({ message: 'Error logging in', error });
     }
 };
-
 exports.getMe = async (req, res) => {
     // Assuming the user ID is passed from req.user._id (after authentication)
     const id = req.user._id;
@@ -144,4 +217,5 @@ exports.getMe = async (req, res) => {
     }
 };
 
-  
+
+
