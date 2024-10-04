@@ -16,7 +16,7 @@ const port = process.env.PORT || 5000;
 app.use(express.json()); // Parse JSON bodies
 app.use(cors({
     credentials: true,
-    origin: ['http://localhost:5174' , 'http://etherna.vip']
+    origin: ['http://localhost:5173' , 'http://etherna.vip']
   })) 
 
 // Simple GET route
