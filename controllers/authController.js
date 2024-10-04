@@ -132,58 +132,79 @@ exports.signup = async (req, res) => {
 // Login Controller
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-
+  
     // Get device info from request headers
     const currentDeviceInfo = req.headers['user-agent'];  // User-Agent from the device/browser
     const currentIp = req.ip;  // IP address of the request
-
+  
     try {
-        // Find the user by email
-        const user = await User.findOne({ email }).populate('mainWallet');
-
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+      // Find the user by email and populate the main wallet
+      const user = await User.findOne({ email }).populate('mainWallet');
+  
+      if (!user) {
+        return res.status(400).json({ message: 'Invalid credentials' });
+      }
+  
+      // Check if the password matches
+      const isMatch = await user.comparePassword(password);
+  
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Invalid credentials' });
+      }
+  
+      // Device lock applies only to non-admin users
+      if (user.role !== 'admin') {
+        // Check if the user account is locked to a specific device
+        if (user.registeredDevice.isLocked) {
+          // If current device info or IP does not match the registered one, reject login
+          if (user.registeredDevice.userAgent !== currentDeviceInfo || user.registeredDevice.ipAddress !== currentIp) {
+            return res.status(403).json({ message: 'This account is locked to another device' });
+          }
+        } else {
+          // If first login, lock the account to the current device
+          user.registeredDevice = {
+            userAgent: currentDeviceInfo,
+            ipAddress: currentIp,
+            isLocked: true,  // Lock account to this device
+          };
+          await user.save();
         }
-
-        // Check if the password matches
-        const isMatch = await user.comparePassword(password);
-
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
-        }
-
-        // Device lock applies only to non-admin users
-        if (user.role !== 'admin') {
-            // Check if the user account is locked to a specific device
-            if (user.registeredDevice.isLocked) {
-                // If current device info or IP does not match the registered one, reject login
-                if (user.registeredDevice.userAgent !== currentDeviceInfo || user.registeredDevice.ipAddress !== currentIp) {
-                    return res.status(403).json({ message: 'This account is locked to another device' });
-                }
-            } else {
-                // If first login, lock the account to the current device
-                user.registeredDevice = {
-                    userAgent: currentDeviceInfo,
-                    ipAddress: currentIp,
-                    isLocked: true,  // Lock account to this device
-                };
-                await user.save();
-            }
-        }
-
-        // Generate a JWT token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-        // Prepare user object without password
-        const { password: pwd, ...userWithoutPassword } = user.toObject();
-
-        // Send response
-        res.status(200).json({ token, user: userWithoutPassword });
+      }
+  
+      // Decrypt the private key before sending it
+      let decryptedPrivateKey;
+      try {
+        decryptedPrivateKey = decrypt(user.mainWallet.privateKey); // Assuming the private key is stored in the user's main wallet
+      } catch (error) {
+        return res.status(500).json({ message: 'Failed to decrypt private key' });
+      }
+  
+      // Generate a JWT token
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+  
+      // Prepare user object without password
+      const { password: pwd, mainWallet, ...userWithoutPassword } = user.toObject();
+  
+      // Check if mainWallet is a Mongoose document and convert it to an object if so
+      const mainWalletResponse = mainWallet ? mainWallet.toObject ? mainWallet.toObject() : mainWallet : null;
+  
+      const userResponse = {
+        ...userWithoutPassword,
+        mainWallet: {
+          ...mainWalletResponse,
+          privateKey: decryptedPrivateKey, // Include decrypted private key
+        },
+      };
+  
+      // Send response
+      res.status(200).json({ token, user: userResponse });
     } catch (error) {
-        console.error('Error logging in:', error);
-        res.status(500).json({ message: 'Error logging in', error });
+      console.error('Error logging in:', error);
+      res.status(500).json({ message: 'Error logging in', error });
     }
-};
+  };
+  
+  
 exports.getMe = async (req, res) => {
     // Assuming the user ID is passed from req.user._id (after authentication)
     const id = req.user._id;
